@@ -35,8 +35,8 @@ async function buildUserClaims(userId: string) {
     where: { userId },
     include: { role: { include: { permissions: { include: { permission: true } } } } }
   });
-  const roles = userRoles.map((r) => r.role.name);
-  const permissions = [...new Set(userRoles.flatMap((r) => r.role.permissions.map((p) => p.permission.key)))];
+  const roles = userRoles.map((r: (typeof userRoles)[number]) => r.role.name);
+  const permissions = [...new Set(userRoles.flatMap((r: (typeof userRoles)[number]) => r.role.permissions.map((p: (typeof userRoles)[number]["role"]["permissions"][number]) => p.permission.key)))];
   return { roles, permissions };
 }
 
