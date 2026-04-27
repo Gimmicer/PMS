@@ -16,7 +16,9 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     env_file:
-      - backend/.env.example
+      - backend/.env
+    enviroment:
+      DATABASE_URL:postgresql://postgres:gVYRUtWWGHOPWaIEtwnLUCQNNxUXzOxb@postgres.railway.internal:5432/railway
     depends_on:
       - postgres
     ports:
@@ -27,7 +29,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     env_file:
-      - frontend/.env.example
+      - frontend/.env
     depends_on:
       - backend
     ports:
