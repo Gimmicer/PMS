@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: PMS API
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000/api
+paths:
+  /auth/login:
+    post:
+      summary: Login user
+      responses:
+        '200':
+          description: Success
+  /goals:
+    get:
+      summary: List goals
+      responses:
+        '200':
+          description: Success
+  /reviews:
+    get:
+      summary: List reviews
+      responses:
+        '200':
+          description: Success

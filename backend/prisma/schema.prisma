@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReviewStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id             String                @id @default(cuid())
+  email          String                @unique
+  name           String
+  passwordHash   String
+  departmentId   String?
+  department     Department?           @relation(fields: [departmentId], references: [id])
+  roles          UserRole[]
+  goals          Goal[]                @relation("GoalOwner")
+  createdGoals   Goal[]                @relation("GoalCreator")
+  reviewCycles   ReviewCycle[]         @relation("CycleCreator")
+  reviews        Review[]              @relation("ReviewEmployee")
+  managedReviews Review[]              @relation("ReviewManager")
+  feedbackGiven  Feedback[]            @relation("FeedbackAuthor")
+  feedbackRecv   Feedback[]            @relation("FeedbackTarget")
+  notifications  Notification[]
+  sessions       RefreshTokenSession[]
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+}
+
+model Department {
+  id        String @id @default(cuid())
+  name      String @unique
+  users     User[]
+  createdAt DateTime @default(now())
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  permissions RolePermission[]
+  users       UserRole[]
+}
+
+model Permission {
+  id    String           @id @default(cuid())
+  key   String           @unique
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  @@id([roleId, permissionId])
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([userId, roleId])
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  targetValue Float?
+  progress    Float    @default(0)
+  ownerId     String
+  creatorId   String
+  owner       User     @relation("GoalOwner", fields: [ownerId], references: [id])
+  creator     User     @relation("GoalCreator", fields: [creatorId], references: [id])
+  reviews     Review[]
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ReviewCycle {
+  id          String   @id @default(cuid())
+  name        String
+  periodStart DateTime
+  periodEnd   DateTime
+  createdById String
+  createdBy   User     @relation("CycleCreator", fields: [createdById], references: [id])
+  reviews     Review[]
+}
+
+model Review {
+  id                String       @id @default(cuid())
+  cycleId           String
+  employeeId        String
+  managerId         String
+  goalId            String?
+  selfComment       String?
+  managerComment    String?
+  rating            Int?
+  status            ReviewStatus @default(DRAFT)
+  cycle             ReviewCycle  @relation(fields: [cycleId], references: [id])
+  employee          User         @relation("ReviewEmployee", fields: [employeeId], references: [id])
+  manager           User         @relation("ReviewManager", fields: [managerId], references: [id])
+  goal              Goal?        @relation(fields: [goalId], references: [id])
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  authorId  String
+  targetId  String
+  message   String
+  author    User     @relation("FeedbackAuthor", fields: [authorId], references: [id])
+  target    User     @relation("FeedbackTarget", fields: [targetId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model RefreshTokenSession {
+  id          String   @id @default(cuid())
+  userId      String
+  tokenHash   String
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
